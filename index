@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キャラクター シルエットクイズ 〜だ〜れだ？〜 (全1311キャラ収録)</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="theme-pokemon">
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo-area">
+        <div id="app-logo-icon" class="theme-icon pokeball-icon"></div>
+        <h1 id="app-title">キャラクター シルエットクイズ</h1>
+        <span class="subtitle">〜 だ〜れだ？ 〜</span>
+      </div>
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="quiz-tab">🎮 クイズ</button>
+        <button class="tab-btn" data-tab="collection-tab">📖 図鑑 (<span id="nav-collection-count">0</span>)</button>
+        <button class="tab-btn" data-tab="ranking-tab">🏆 ランキング</button>
+        <button class="tab-btn" data-tab="sql-tab">🔍 SQL探検</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- ==================== 1. クイズタブ ==================== -->
+    <section id="quiz-tab" class="tab-content active">
+      <!-- 4大ゲームモード選択バー -->
+      <div class="game-mode-banner">
+        <span class="mode-label">モード選択:</span>
+        <div class="game-mode-buttons">
+          <button class="game-mode-btn active" data-category="pokemon">
+            <span class="icon">🔴</span> ポケモン <small>(1158)</small>
+          </button>
+          <button class="game-mode-btn" data-category="yokai">
+            <span class="icon">👻</span> 妖怪ウォッチ <small>(51)</small>
+          </button>
+          <button class="game-mode-btn" data-category="dq">
+            <span class="icon">⚔️</span> ドラクエ <small>(50)</small>
+          </button>
+          <button class="game-mode-btn" data-category="mario">
+            <span class="icon">🍄</span> マリオ <small>(52)</small>
+          </button>
+          <button class="game-mode-btn" data-category="all">
+            <span class="icon">🌟</span> オールスター <small>(全1311)</small>
+          </button>
+        </div>
+      </div>
+
+      <!-- サブコントロールバー (ステータス & ポケモン用サブフィルター) -->
+      <div class="quiz-controls-bar">
+        <div id="pokemon-subfilter-area" class="filter-controls">
+          <span class="ctrl-label">姿の指定:</span>
+          <div class="pill-group">
+            <button class="pill-btn active" data-form="all">🌟 すべて</button>
+            <button class="pill-btn" data-form="normal">🐾 通常</button>
+            <button class="pill-btn" data-form="mega">⚡ メガシンカ</button>
+            <button class="pill-btn" data-form="gmax">🔥 キョダイマックス</button>
+          </div>
+        </div>
+        <div class="status-counters">
+          <div class="stat-badge"><span class="label">スコア</span><span id="score-display" class="val">0</span></div>
+          <div class="stat-badge"><span class="label">連続正解</span><span id="streak-display" class="val">0</span></div>
+          <div class="stat-badge"><span class="label">タイマー</span><span id="timer-display" class="val">0.0s</span></div>
+        </div>
+      </div>
+
+      <!-- クイズメインステージ -->
+      <div class="stage-card">
+        <!-- バナー -->
+        <div class="stage-banner">
+          <div class="banner-left">
+            <span id="speech-bubble-text" class="speech-bubble">「この ポケモン だ〜れだ？」</span>
+            <span id="category-badge" class="cat-tag pokemon">🔴 ポケモン</span>
+            <span id="form-indicator-badge" class="form-tag hidden">⚡ メガシンカ</span>
+          </div>
+          <button id="sound-toggle-btn" class="icon-btn" title="効果音 ON/OFF">🔊 音声: ON</button>
+        </div>
+
+        <!-- シルエット表示エリア -->
+        <div class="silhouette-display-wrapper">
+          <div class="spotlight-circle">
+            <img id="character-img" class="character-image silhouette" src="" alt="シルエット">
+          </div>
+          <!-- 正解時オーバーレイアニメーション -->
+          <div id="result-overlay" class="result-overlay hidden">
+            <div id="result-badge" class="result-badge">せいかい！🎉</div>
+            <div id="result-name" class="result-name">ジバニャン</div>
+            <div id="result-genus" class="result-genus">地縛霊のネコ妖怪</div>
+            <div id="result-score-popup" class="result-score-popup">+1200 pts!</div>
+          </div>
+        </div>
+
+        <!-- ヒントエリア (DBから抽出) -->
+        <div class="hints-box">
+          <div class="hints-header">
+            <span>💡 データベースのヒント (使用するとスコアが少し減ります)</span>
+          </div>
+          <div class="hints-grid">
+            <button id="hint-attr1-btn" class="hint-trigger-btn">
+              <span id="hint-attr1-btn-text">ヒント1: タイプを見る</span>
+            </button>
+            <button id="hint-genus-btn" class="hint-trigger-btn">
+              <span id="hint-genus-btn-text">ヒント2: 分類・肩書きを見る</span>
+            </button>
+            <button id="hint-flavor-btn" class="hint-trigger-btn">
+              <span id="hint-flavor-btn-text">ヒント3: 説明・解説を見る</span>
+            </button>
+          </div>
+          <div id="hints-display-area" class="hints-display-area hidden">
+            <div id="hint-attr1-reveal" class="hint-tag hidden"></div>
+            <div id="hint-genus-reveal" class="hint-tag hidden"></div>
+            <div id="hint-flavor-reveal" class="hint-text-reveal hidden"></div>
+          </div>
+        </div>
+
+        <!-- 手入力回答フォーム -->
+        <div class="answer-section">
+          <div class="text-answer-container">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="text-answer-input"
+                placeholder="名前を入力 (カタカナ/ひらがなOK) 例: ピカチュウ / スライム / ジバニャン / クッパ"
+                autocomplete="off"
+                list="character-datalist"
+                autofocus
+              >
+              <datalist id="character-datalist"></datalist>
+            </div>
+            <button id="text-submit-btn" class="primary-btn submit-large-btn">回答する！ (Enter)</button>
+          </div>
+
+          <!-- 惜しいメッセージ表示 -->
+          <div id="answer-feedback" class="answer-feedback hidden"></div>
+
+          <!-- 次の問題へボタン -->
+          <div id="next-action-area" class="next-action-area hidden">
+            <button id="next-question-btn" class="action-btn next-btn">つぎのもんだいへ ➔ (Enter)</button>
+            <button id="finish-game-btn" class="action-btn finish-btn">成績をランキングに登録 🏆</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. 図鑑 / コレクションタブ ==================== -->
+    <section id="collection-tab" class="tab-content">
+      <div class="pokedex-header-card">
+        <h2 id="collection-title">📖 キャラクター図鑑</h2>
+        <div class="collection-category-tabs">
+          <button class="cat-switch-btn active" data-cat="pokemon">🔴 ポケモン (1158)</button>
+          <button class="cat-switch-btn" data-cat="yokai">👻 妖怪ウォッチ (51)</button>
+          <button class="cat-switch-btn" data-cat="dq">⚔️ ドラクエ (50)</button>
+          <button class="cat-switch-btn" data-cat="mario">🍄 マリオ (52)</button>
+        </div>
+        <div class="pokedex-progress-bar-container">
+          <div id="collection-progress-bar" class="pokedex-progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="pokedex-stats-text">
+          登録済み: <strong id="collection-collected-text">0</strong> / <span id="collection-total-text">0</span> 体 (<span id="collection-rate-text">0%</span>)
+        </div>
+      </div>
+
+      <div id="collection-grid" class="pokedex-grid">
+        <!-- JSで動的生成 -->
+      </div>
+    </section>
+
+    <!-- ==================== 3. ランキング＆統計タブ ==================== -->
+    <section id="ranking-tab" class="tab-content">
+      <div class="ranking-layout">
+        <div class="ranking-card">
+          <h2>🏆 手入力ハイスコアランキング</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>順位</th>
+                <th>プレイヤー名</th>
+                <th>モード</th>
+                <th>スコア</th>
+                <th>正解数</th>
+                <th>最大コンボ</th>
+                <th>日時</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <tr><td colspan="7">読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="stats-card">
+          <h2>📊 データベース分析（統計）</h2>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-num" id="stat-total-answers">0</span>
+              <span class="stat-lbl">総解答数</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num" id="stat-accuracy">0%</span>
+              <span class="stat-lbl">全体正解率</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num" id="stat-avg-time">0s</span>
+              <span class="stat-lbl">平均解答時間</span>
+            </div>
+          </div>
+          <div class="top-lists">
+            <div class="top-list-block">
+              <h3>よく正解されるキャラクター TOP 5</h3>
+              <ol id="top-correct-list"></ol>
+            </div>
+            <div class="top-list-block">
+              <h3>間違えやすいキャラクター TOP 5</h3>
+              <ol id="top-wrong-list"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. SQL探検コンソールタブ ==================== -->
+    <section id="sql-tab" class="tab-content">
+      <div class="sql-explorer-card">
+        <h2>🔍 データベース（SQLite）探検コンソール</h2>
+        <p>全1311体のキャラクターデータベース（`characters` テーブル）を直接SQLで検索してみよう！</p>
+
+        <div class="preset-queries">
+          <span>プリセットクエリ:</span>
+          <button class="preset-btn" data-sql="SELECT name_ja, attribute1, genus FROM characters WHERE category = 'yokai' LIMIT 20;">👻 妖怪ウォッチ一覧 (51体)</button>
+          <button class="preset-btn" data-sql="SELECT name_ja, attribute1, genus FROM characters WHERE category = 'dq' LIMIT 20;">⚔️ ドラクエモンスター一覧 (50体)</button>
+          <button class="preset-btn" data-sql="SELECT name_ja, attribute1, genus FROM characters WHERE category = 'mario' LIMIT 20;">🍄 マリオキャラクター一覧 (52体)</button>
+          <button class="preset-btn" data-sql="SELECT category, count(*) as count FROM characters GROUP BY category;">📊 カテゴリ別キャラクター数集計</button>
+          <button class="preset-btn" data-sql="SELECT c.category, c.name_ja, pc.captured_count, pc.last_captured_at FROM player_collection pc JOIN characters c ON pc.character_id = c.id ORDER BY pc.captured_count DESC;">⭐ 捕獲・クリア数ランキング</button>
+        </div>
+
+        <div class="sql-input-area">
+          <textarea id="sql-query-input" rows="3" placeholder="SELECT category, count(*) FROM characters GROUP BY category;"></textarea>
+          <button id="sql-exec-btn" class="primary-btn">▶ SQL実行</button>
+        </div>
+
+        <div class="sql-result-area">
+          <div id="sql-meta-info" class="sql-meta">実行ボタンを押すと結果が表示されます。</div>
+          <div class="sql-table-wrapper">
+            <table id="sql-result-table" class="data-table">
+              <thead id="sql-thead"></thead>
+              <tbody id="sql-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ランキング登録モーダル -->
+  <div id="ranking-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>🎉 ゲーム終了！</h3>
+      <p>あなたの最終スコア: <strong id="modal-final-score" class="highlight-score">0</strong> pts</p>
+      <p>正解数: <span id="modal-final-correct">0</span> 問 / 最大連続正解: <span id="modal-final-streak">0</span> 回</p>
+      <div class="input-group">
+        <label for="player-name-input">プレイヤー名を入力してください:</label>
+        <input type="text" id="player-name-input" maxlength="15" value="チャレンジャー">
+      </div>
+      <div class="modal-actions">
+        <button id="submit-score-btn" class="primary-btn">ランキングに登録する</button>
+        <button id="cancel-score-btn" class="secondary-btn">登録せずもう一度遊ぶ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
